@@ -44,7 +44,7 @@ int num_devices = 0;
 DS18B20_Info *devices[MAX_DEVICES] = {0};
 owb_rmt_driver_info rmt_driver_info;
 
-void ds18b20_init(void)
+void ds18b20_wrapped_init(void)
 {
     printf("setting up temp sensor\n");
     owb = owb_rmt_initialize(&rmt_driver_info, GPIO_DS18B20_0, RMT_CHANNEL_1, RMT_CHANNEL_0);
@@ -154,7 +154,7 @@ void ds18b20_init(void)
     printf("finished sensor init\n");
 }
 
-void ds18b20_deinit(void)
+void ds18b20_wrapped_deinit(void)
 {
     // clean up dynamically allocated data
     for (int i = 0; i < num_devices; ++i)
@@ -167,7 +167,7 @@ void ds18b20_deinit(void)
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 }
 
-void ds18b20_read(void)
+void ds18b20_wrapped_read(void)
 {
     printf("temp read\n");
     // Read temperatures more efficiently by starting conversions on all devices at the same time
