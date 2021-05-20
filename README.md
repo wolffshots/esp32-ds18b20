@@ -21,6 +21,33 @@ and multiple devices on a single bus.
 
 This fork has been extended to implement some of the functionality of the example above.
 
+## Folder contents
+
+the component **esp32-ds18b20** contains two source file in C language [ds18b20.c](ds18b20.c) and [ds18b20_wrapper.c](ds18b20_wrapper.c). these files are located in the root folder.
+
+esp-idf projects are build using cmake. the project build configuration is contained in `CMakeLists.txt` files that provide set of directives and instructions describing the project's source files and targets (executable, library, or both). 
+
+below is short explanation of remaining files in the project folder.
+
+```
+├── doc                         
+├── include                     header file directory
+│   ├── ds18b20_wrapper.h       the header file for the wrapper component
+│   └── ds18b20.h               the header file for the component
+├── .gitignore                  describes what files and folders git should ignore
+├── .travis.yml                 ci/cd for docs to github pages
+├── CMakeLists.txt              base project cmake file (describes dependencies, include dir and src dir)
+├── component.mk                component make file
+├── ds18b20_wrapper.c           core src file of the wrapper component
+├── ds18b20.c                   core src file of the component
+├── Kconfig.projbuild           kconfig description file to add build time vars
+├── LICENSE.md                  MIT license file
+└── README.md                   this file
+```
+
+for more information on structure and contents of esp-idf projects, please refer to Section [Build System](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/build-system.html) of the esp-idf programming guide.
+
+
 ## Features
 
 In cooperation with the underlying esp32-owb component, this component includes:
@@ -95,3 +122,4 @@ Parts of this code are based on references provided to the public domain by Maxi
 - [ ] extend docs to contain added content
 - [ ] refactor wrapper to only contain necessary content
 - [ ] fully comment code once I understand it
+- [ ] fix formatting and capitilisation throughout project
