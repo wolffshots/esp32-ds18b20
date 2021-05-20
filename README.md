@@ -92,14 +92,10 @@ Note that use of parasitic power mode disables the ability for devices on the bu
 completed. This means that DS18B20 devices in parasitic power mode are not able to communicate when they have completed
 a temperature conversion. In this mode, a delay for a pre-calculated duration occurs, and then the conversion result is
 read from the device(s). *If your ESP32 is not running on the correct clock rate, this duration may be too short!*  
-
+<!-- 
 ## Documentation
 
-Automatically generated API documentation (doxygen) is available [here](https://davidantliff.github.io/esp32-ds18b20/index.html).
-
-## Source Code
-
-The source is available from [GitHub](https://www.github.com/DavidAntliff/esp32-ds18b20).
+Automatically generated API documentation (doxygen) is available [here](https://wolffshots.github.io/esp32-ds18b20/index.html). -->
 
 ## License
 
