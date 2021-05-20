@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-#include "temp_sensor.h"
+#include "ds18b20_wrapper.h"
 #include "utility.h"
 
 #include "freertos/FreeRTOS.h"
