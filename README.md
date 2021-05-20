@@ -13,6 +13,7 @@ environment, using the xtensa-esp32-elf toolchain (gcc version 5.2.0).
 ## Dependencies
 
 Requires [esp32-owb](https://github.com/DavidAntliff/esp32-owb).
+<!-- Requires [esp32-utility](https://github.com/wolffshots/esp32-utility). -->
 
 ## Example
 

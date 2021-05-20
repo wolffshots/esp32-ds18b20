@@ -24,7 +24,6 @@
  */
 
 #include "ds18b20_wrapper.h"
-#include "utility.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
