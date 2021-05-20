@@ -1,0 +1,18 @@
+# https://www.kernel.org/doc/html/latest/kbuild/kconfig-language.html
+menu "wolffshots/esp32-ds18b20 config"
+    config TEMP_OWB_GPIO
+        int "gpio pin for temp sensor"
+        default 14
+        help
+            set to the pin that is connected to the data lead of the temp sensor
+    config TEMP_MAX_DEVS
+        int "max devices for owb"
+        default 2
+        help
+            max number of devices to be connected to a onewire bus
+    config TEMP_SAMPLE_PERIOD
+        int "sample period"
+        default 1000
+        help
+            the sample period for the temp sensor to report in (in milliseconds))
+endmenu

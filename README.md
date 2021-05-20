@@ -19,6 +19,8 @@ Requires [esp32-owb](https://github.com/DavidAntliff/esp32-owb).
 See [esp32-ds18b20-example](https://github.com/DavidAntliff/esp32-ds18b20-example) for an example that supports single
 and multiple devices on a single bus.
 
+This fork has been extended to implement some of the functionality of the example above.
+
 ## Features
 
 In cooperation with the underlying esp32-owb component, this component includes:
@@ -88,11 +90,8 @@ Parts of this code are based on references provided to the public domain by Maxi
 
 "1-Wire" is a registered trademark of Maxim Integrated.
 
-## Roadmap
+## Todo
 
-The following features are anticipated but not yet implemented:
-
- * Concurrency support (multiple tasks accessing devices on the same bus).
- * Alarm support.
- * EEPROM support.
- * Parasitic power support.
+- [ ] extend docs to contain added content
+- [ ] refactor wrapper to only contain necessary content
+- [ ] fully comment code once I understand it

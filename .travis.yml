@@ -10,7 +10,7 @@ branches:
 # Environment variables
 env:
   global:
-    - GH_REPO_REF: github.com/DavidAntliff/esp32-ds18b20.git
+    - GH_REPO_REF: github.com/wolffshots/esp32-ds18b20.git
 
 # Install dependencies
 addons:
