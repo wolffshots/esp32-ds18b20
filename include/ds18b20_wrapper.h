@@ -31,9 +31,10 @@ extern "C"
 {
 #endif // __cplusplus
 
-    void ds18b20_wrapped_init(void);
+    int ds18b20_wrapped_init(void);
     void ds18b20_wrapped_deinit(void);
     void ds18b20_wrapped_read(void);
+    void ds18b20_wrapped_capture(float *results, int size);
 
 #ifdef __cplusplus
 }

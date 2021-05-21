@@ -43,8 +43,11 @@ OneWireBus *owb;
 int num_devices = 0;
 DS18B20_Info *devices[MAX_DEVICES] = {0};
 owb_rmt_driver_info rmt_driver_info;
-
-void ds18b20_wrapped_init(void)
+/**
+ * intitialises the onewire bus and finds and intialises ds18b20 sensors along the pin
+ * @return the number of devices it found on the bus as an int
+ */
+int ds18b20_wrapped_init(void)
 {
     printf("setting up temp sensor\n");
     owb = owb_rmt_initialize(&rmt_driver_info, GPIO_DS18B20_0, RMT_CHANNEL_1, RMT_CHANNEL_0);
@@ -150,8 +153,8 @@ void ds18b20_wrapped_init(void)
     owb_use_strong_pullup_gpio(owb, CONFIG_STRONG_PULLUP_GPIO);
 #endif
 
-    
     printf("finished sensor init\n");
+    return num_devices;
 }
 
 void ds18b20_wrapped_deinit(void)
@@ -214,5 +217,31 @@ void ds18b20_wrapped_read(void)
     else
     {
         printf("\nno DS18B20 devices detected!\n");
+    }
+}
+/**
+ * this function runs conversion on all the owb devices, waits for conversion to 
+ * finish and then reads the temperatures into the provided results array
+ *  
+ * @param results a pointer to the array to capture results to
+ * @param size the number of devices found and the size of the results array
+ */
+void ds18b20_wrapped_capture(float *results, int size)
+{
+    printf("temp capture\n");
+    if (size > 0)
+    {
+        TickType_t last_wake_time = xTaskGetTickCount();
+        ds18b20_convert_all(owb);
+        ds18b20_wait_for_conversion(devices[0]);
+        for (int i = 0; i < size; ++i)
+        {
+            ds18b20_read_temp(devices[i], &results[i]);
+        }
+        vTaskDelayUntil(&last_wake_time, SAMPLE_PERIOD / portTICK_PERIOD_MS);
+    }
+    else
+    {
+        printf("\nno DS18B20 devices detected or invalid size provided\n");
     }
 }
