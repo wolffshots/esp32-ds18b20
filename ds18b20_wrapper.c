@@ -228,7 +228,6 @@ void ds18b20_wrapped_read(void)
  */
 void ds18b20_wrapped_capture(float *results, int size)
 {
-    printf("temp capture\n");
     if (size > 0)
     {
         TickType_t last_wake_time = xTaskGetTickCount();
