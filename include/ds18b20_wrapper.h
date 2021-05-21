@@ -1,6 +1,3 @@
-#ifndef DS18B20_WRAPPER_H
-#define DS18B20_WRAPPER_H
-
 /*
  * MIT License
  *
@@ -25,6 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
+#ifndef DS18B20_WRAPPER_H
+#define DS18B20_WRAPPER_H
 
 #ifdef __cplusplus
 extern "C"
