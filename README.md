@@ -113,10 +113,3 @@ The code in this project is licensed under the MIT license - see LICENSE for det
 Parts of this code are based on references provided to the public domain by Maxim Integrated.
 
 "1-Wire" is a registered trademark of Maxim Integrated.
-
-## Todo
-
-- [ ] extend docs to contain added content
-- [ ] refactor wrapper to only contain necessary content
-- [ ] fully comment code once I understand it
-- [ ] fix formatting and capitilisation throughout project
