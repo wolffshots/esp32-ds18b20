@@ -156,12 +156,16 @@ void ds18b20_wrapped_init(void)
 
 void ds18b20_wrapped_deinit(void)
 {
+    printf("temp deinit start\n");
+
     // clean up dynamically allocated data
     for (int i = 0; i < num_devices; ++i)
     {
         ds18b20_free(&devices[i]);
     }
     owb_uninitialize(owb);
+
+    printf("temp deinit end\n");
 
     fflush(stdout);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
