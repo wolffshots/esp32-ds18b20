@@ -30,7 +30,6 @@
  * @brief implementation for wrapper component to help setup and interface with temp sensor
  */
 
-
 #include "ds18b20_wrapper.h"
 
 #include "freertos/FreeRTOS.h"
@@ -42,27 +41,30 @@
 #include "owb.h"
 #include "ds18b20.h"
 
-#define GPIO_DS18B20_0 (CONFIG_TEMP_OWB_GPIO)
-#define MAX_DEVICES (CONFIG_TEMP_MAX_DEVS)
-#define DS18B20_RESOLUTION (DS18B20_RESOLUTION_12_BIT)
-#define SAMPLE_PERIOD (CONFIG_TEMP_SAMPLE_PERIOD) // milliseconds
+#define GPIO_DS18B20_0 (CONFIG_TEMP_OWB_GPIO)          ///< the gpio pin to search for sensors on
+#define MAX_DEVICES (CONFIG_TEMP_MAX_DEVS)             ///< maximum number of devices to search for
+#define DS18B20_RESOLUTION (DS18B20_RESOLUTION_12_BIT) ///< the resolution of the temp sensor
+#define SAMPLE_PERIOD (CONFIG_TEMP_SAMPLE_PERIOD)      ///< milliseconds
 
-OneWireBus *owb;
-int num_devices = 0;
-DS18B20_Info *devices[MAX_DEVICES] = {0};
-owb_rmt_driver_info rmt_driver_info;
+OneWireBus *owb;                                  ///< onewire bus pointer
+int num_devices = 0;                              ///< current number of devices found
+DS18B20_Info *devices[MAX_DEVICES] = {0};         ///< list of devices
+owb_rmt_driver_info rmt_driver_info;              ///< the rmt driver info for communicating over the owb
+static const char *TAG = CONFIG_TEMP_WRAPPER_TAG; ///< tag for logging
+
 /**
+ * @brief init the sensor
  * intitialises the onewire bus and finds and intialises ds18b20 sensors along the pin
  * @return the number of devices it found on the bus as an int
  */
 int ds18b20_wrapped_init(void)
 {
-    printf("setting up temp sensor\n");
+    ESP_LOGI(TAG, "setting up temp sensor\n");
     owb = owb_rmt_initialize(&rmt_driver_info, GPIO_DS18B20_0, RMT_CHANNEL_1, RMT_CHANNEL_0);
     owb_use_crc(owb, true); // enable CRC check for ROM code
 
     // Find all connected devices
-    printf("find devices:\n");
+    ESP_LOGD(TAG, "find devices:\n");
     OneWireBus_ROMCode device_rom_codes[MAX_DEVICES] = {0};
 
     OneWireBus_SearchState search_state = {0};
@@ -72,12 +74,12 @@ int ds18b20_wrapped_init(void)
     {
         char rom_code_s[17];
         owb_string_from_rom_code(search_state.rom_code, rom_code_s, sizeof(rom_code_s));
-        printf("  %d : %s\n", num_devices, rom_code_s);
+        ESP_LOGD(TAG, "  %d : %s\n", num_devices, rom_code_s);
         device_rom_codes[num_devices] = search_state.rom_code;
         ++num_devices;
         owb_search_next(owb, &search_state, &found);
     }
-    printf("Found %d device%s\n", num_devices, num_devices == 1 ? "" : "s");
+    ESP_LOGI(TAG, "Found %d device%s\n", num_devices, num_devices == 1 ? "" : "s");
 
     // In this example, if a single device is present, then the ROM code is probably
     // not very interesting, so just print it out. If there are multiple devices,
@@ -92,11 +94,11 @@ int ds18b20_wrapped_init(void)
         {
             char rom_code_s[OWB_ROM_CODE_STRING_LENGTH];
             owb_string_from_rom_code(rom_code, rom_code_s, sizeof(rom_code_s));
-            printf("Single device %s present\n", rom_code_s);
+            ESP_LOGD(TAG, "Single device %s present\n", rom_code_s);
         }
         else
         {
-            printf("An error occurred reading ROM code: %d", status);
+            ESP_LOGE(TAG, "An error occurred reading ROM code: %d", status);
         }
     }
     else
@@ -115,11 +117,11 @@ int ds18b20_wrapped_init(void)
         owb_status search_status = owb_verify_rom(owb, known_device, &is_present);
         if (search_status == OWB_STATUS_OK)
         {
-            printf("Device %s is %s\n", rom_code_s, is_present ? "present" : "not present");
+            ESP_LOGD(TAG, "Device %s is %s\n", rom_code_s, is_present ? "present" : "not present");
         }
         else
         {
-            printf("An error occurred searching for known device: %d", search_status);
+            ESP_LOGE(TAG, "An error occurred searching for known device: %d", search_status);
         }
     }
 
@@ -132,7 +134,7 @@ int ds18b20_wrapped_init(void)
 
         if (num_devices == 1)
         {
-            printf("Single device optimisations enabled\n");
+            ESP_LOGD(TAG, "Single device optimisations enabled\n");
             ds18b20_init_solo(ds18b20_info, owb); // only one device on bus
         }
         else
@@ -148,7 +150,7 @@ int ds18b20_wrapped_init(void)
     ds18b20_check_for_parasite_power(owb, &parasitic_power);
     if (parasitic_power)
     {
-        printf("Parasitic-powered devices detected");
+        ESP_LOGI(TAG, "parasitic-powered devices detected");
     }
 
     // In parasitic-power mode, devices cannot indicate when conversions are complete,
@@ -161,13 +163,16 @@ int ds18b20_wrapped_init(void)
     owb_use_strong_pullup_gpio(owb, CONFIG_STRONG_PULLUP_GPIO);
 #endif
 
-    printf("finished sensor init\n");
+    ESP_LOGI(TAG, "finished sensor init\n");
     return num_devices;
 }
-
+/**
+ * @brief deinit the sensor
+ * cleans up and frees all of the devices and the onewire bus
+ */
 void ds18b20_wrapped_deinit(void)
 {
-    printf("temp deinit start\n");
+    ESP_LOGI(TAG, "temp deinit start\n");
 
     // clean up dynamically allocated data
     for (int i = 0; i < num_devices; ++i)
@@ -176,15 +181,19 @@ void ds18b20_wrapped_deinit(void)
     }
     owb_uninitialize(owb);
 
-    printf("temp deinit end\n");
+    ESP_LOGI(TAG, "temp deinit end\n");
 
     fflush(stdout);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
 }
-
+/**
+ * @brief print the temps
+ * runs conversion on all the owb devices, waits for the conversion and then
+ * prints out the results when it receives them
+ */
 void ds18b20_wrapped_read(void)
 {
-    printf("temp read\n");
+    ESP_LOGD(TAG, "temp read\n");
     // Read temperatures more efficiently by starting conversions on all devices at the same time
     int errors_count[MAX_DEVICES] = {0};
     int sample_count = 0;
@@ -199,7 +208,6 @@ void ds18b20_wrapped_read(void)
         ds18b20_wait_for_conversion(devices[0]);
 
         // Read the results immediately after conversion otherwise it may fail
-        // (using printf before reading may take too long)
         float readings[MAX_DEVICES] = {0};
         DS18B20_ERROR errors[MAX_DEVICES] = {0};
 
@@ -209,7 +217,7 @@ void ds18b20_wrapped_read(void)
         }
 
         // Print results in a separate loop, after all have been read
-        printf("\ntemperature readings (degrees C): sample %d\n", ++sample_count);
+        ESP_LOGI(TAG, "\ntemperature readings (degrees C): sample %d\n", ++sample_count);
         for (int i = 0; i < num_devices; ++i)
         {
             if (errors[i] != DS18B20_OK)
@@ -217,17 +225,18 @@ void ds18b20_wrapped_read(void)
                 ++errors_count[i];
             }
 
-            printf("  %d: %.1f    %d errors\n", i, readings[i], errors_count[i]);
+            ESP_LOGI(TAG, "  %d: %.1f    %d errors\n", i, readings[i], errors_count[i]);
         }
 
         vTaskDelayUntil(&last_wake_time, SAMPLE_PERIOD / portTICK_PERIOD_MS);
     }
     else
     {
-        printf("\nno DS18B20 devices detected!\n");
+        ESP_LOGE(TAG, "\nno DS18B20 devices detected!\n");
     }
 }
 /**
+ * @brief capture temps to results
  * this function runs conversion on all the owb devices, waits for conversion to 
  * finish and then reads the temperatures into the provided results array
  *  
@@ -249,6 +258,6 @@ void ds18b20_wrapped_capture(float *results, int size)
     }
     else
     {
-        printf("\nno DS18B20 devices detected or invalid size provided\n");
+        ESP_LOGE(TAG, "\nno DS18B20 devices detected or invalid size provided\n");
     }
 }

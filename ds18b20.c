@@ -47,21 +47,21 @@
 #include "ds18b20.h"
 #include "owb.h"
 
-static const char * TAG = "ds18b20";
-static const int T_CONV = 750;   // maximum conversion time at 12-bit resolution in milliseconds
+static const char *TAG = CONFIG_TEMP_TAG; ///< tag for logging
+static const int T_CONV = 750;            ///< maximum conversion time at 12-bit resolution in milliseconds
 
 // Function commands
-#define DS18B20_FUNCTION_TEMP_CONVERT       0x44  ///< Initiate a single temperature conversion
-#define DS18B20_FUNCTION_SCRATCHPAD_WRITE   0x4E  ///< Write 3 bytes of data to the device scratchpad at positions 2, 3 and 4
-#define DS18B20_FUNCTION_SCRATCHPAD_READ    0xBE  ///< Read 9 bytes of data (including CRC) from the device scratchpad
-#define DS18B20_FUNCTION_SCRATCHPAD_COPY    0x48  ///< Copy the contents of the scratchpad to the device EEPROM
-#define DS18B20_FUNCTION_EEPROM_RECALL      0xB8  ///< Restore alarm trigger values and configuration data from EEPROM to the scratchpad
-#define DS18B20_FUNCTION_POWER_SUPPLY_READ  0xB4  ///< Determine if a device is using parasitic power
+#define DS18B20_FUNCTION_TEMP_CONVERT 0x44      ///< Initiate a single temperature conversion
+#define DS18B20_FUNCTION_SCRATCHPAD_WRITE 0x4E  ///< Write 3 bytes of data to the device scratchpad at positions 2, 3 and 4
+#define DS18B20_FUNCTION_SCRATCHPAD_READ 0xBE   ///< Read 9 bytes of data (including CRC) from the device scratchpad
+#define DS18B20_FUNCTION_SCRATCHPAD_COPY 0x48   ///< Copy the contents of the scratchpad to the device EEPROM
+#define DS18B20_FUNCTION_EEPROM_RECALL 0xB8     ///< Restore alarm trigger values and configuration data from EEPROM to the scratchpad
+#define DS18B20_FUNCTION_POWER_SUPPLY_READ 0xB4 ///< Determine if a device is using parasitic power
 
 /// @cond ignore
 typedef struct
 {
-    uint8_t temperature[2];    // [0] is LSB, [1] is MSB
+    uint8_t temperature[2]; // [0] is LSB, [1] is MSB
     uint8_t trigger_high;
     uint8_t trigger_low;
     uint8_t configuration;
@@ -70,7 +70,7 @@ typedef struct
 } __attribute__((packed)) Scratchpad;
 /// @endcond ignore
 
-static void _init(DS18B20_Info * ds18b20_info, const OneWireBus * bus)
+static void _init(DS18B20_Info *ds18b20_info, const OneWireBus *bus)
 {
     if (ds18b20_info != NULL)
     {
@@ -78,7 +78,7 @@ static void _init(DS18B20_Info * ds18b20_info, const OneWireBus * bus)
         memset(&ds18b20_info->rom_code, 0, sizeof(ds18b20_info->rom_code));
         ds18b20_info->use_crc = false;
         ds18b20_info->resolution = DS18B20_RESOLUTION_INVALID;
-        ds18b20_info->solo = false;   // assume multiple devices unless told otherwise
+        ds18b20_info->solo = false; // assume multiple devices unless told otherwise
         ds18b20_info->init = true;
     }
     else
@@ -87,7 +87,7 @@ static void _init(DS18B20_Info * ds18b20_info, const OneWireBus * bus)
     }
 }
 
-static bool _is_init(const DS18B20_Info * ds18b20_info)
+static bool _is_init(const DS18B20_Info *ds18b20_info)
 {
     bool ok = false;
     if (ds18b20_info != NULL)
@@ -109,7 +109,7 @@ static bool _is_init(const DS18B20_Info * ds18b20_info)
     return ok;
 }
 
-static bool _address_device(const DS18B20_Info * ds18b20_info)
+static bool _address_device(const DS18B20_Info *ds18b20_info)
 {
     bool present = false;
     if (_is_init(ds18b20_info))
@@ -162,7 +162,7 @@ static float _wait_for_duration(DS18B20_RESOLUTION resolution)
     return (float)(end_time - start_time) / 1000000.0f;
 }
 
-static float _wait_for_device_signal(const DS18B20_Info * ds18b20_info)
+static float _wait_for_device_signal(const DS18B20_Info *ds18b20_info)
 {
     float elapsed_time = 0.0f;
     if (_check_resolution(ds18b20_info->resolution))
@@ -204,7 +204,7 @@ static float _decode_temp(uint8_t lsb, uint8_t msb, DS18B20_RESOLUTION resolutio
     if (_check_resolution(resolution))
     {
         // masks to remove undefined bits from result
-        static const uint8_t lsb_mask[4] = { ~0x07, ~0x03, ~0x01, ~0x00 };
+        static const uint8_t lsb_mask[4] = {~0x07, ~0x03, ~0x01, ~0x00};
         uint8_t lsb_masked = lsb_mask[resolution - DS18B20_RESOLUTION_9_BIT] & lsb;
         int16_t raw = (msb << 8) | lsb_masked;
         result = raw / 16.0f;
@@ -221,12 +221,13 @@ static size_t _min(size_t x, size_t y)
     return x > y ? y : x;
 }
 
-static DS18B20_ERROR _read_scratchpad(const DS18B20_Info * ds18b20_info, Scratchpad * scratchpad, size_t count)
+static DS18B20_ERROR _read_scratchpad(const DS18B20_Info *ds18b20_info, Scratchpad *scratchpad, size_t count)
 {
     // If CRC is enabled, regardless of count, read the entire scratchpad and verify the CRC,
     // otherwise read up to the scratchpad size, or count, whichever is smaller.
 
-    if (!scratchpad) {
+    if (!scratchpad)
+    {
         return DS18B20_ERROR_NULL;
     }
 
@@ -236,7 +237,7 @@ static DS18B20_ERROR _read_scratchpad(const DS18B20_Info * ds18b20_info, Scratch
     {
         count = sizeof(Scratchpad);
     }
-    count = _min(sizeof(Scratchpad), count);   // avoid reading past end of scratchpad
+    count = _min(sizeof(Scratchpad), count); // avoid reading past end of scratchpad
 
     ESP_LOGD(TAG, "scratchpad read: CRC %d, count %d", ds18b20_info->use_crc, count);
     if (_address_device(ds18b20_info))
@@ -254,7 +255,7 @@ static DS18B20_ERROR _read_scratchpad(const DS18B20_Info * ds18b20_info, Scratch
                     // Without CRC, or partial read:
                     ESP_LOGD(TAG, "No CRC check");
                     bool is_present = false;
-                    owb_reset(ds18b20_info->bus, &is_present);  // terminate early
+                    owb_reset(ds18b20_info->bus, &is_present); // terminate early
                 }
                 else
                 {
@@ -289,7 +290,7 @@ static DS18B20_ERROR _read_scratchpad(const DS18B20_Info * ds18b20_info, Scratch
     return err;
 }
 
-static bool _write_scratchpad(const DS18B20_Info * ds18b20_info, const Scratchpad * scratchpad, bool verify)
+static bool _write_scratchpad(const DS18B20_Info *ds18b20_info, const Scratchpad *scratchpad, bool verify)
 {
     bool result = false;
     // Only bytes 2, 3 and 4 (trigger and configuration) can be written.
@@ -312,8 +313,8 @@ static bool _write_scratchpad(const DS18B20_Info * ds18b20_info, const Scratchpa
                     if (memcmp(&scratchpad->trigger_high, &read.trigger_high, 3) != 0)
                     {
                         ESP_LOGE(TAG, "scratchpad verify failed: "
-                                 "wrote {0x%02x, 0x%02x, 0x%02x}, "
-                                 "read {0x%02x, 0x%02x, 0x%02x}",
+                                      "wrote {0x%02x, 0x%02x, 0x%02x}, "
+                                      "read {0x%02x, 0x%02x, 0x%02x}",
                                  scratchpad->trigger_high, scratchpad->trigger_low, scratchpad->configuration,
                                  read.trigger_high, read.trigger_low, read.configuration);
                         result = false;
@@ -330,12 +331,11 @@ static bool _write_scratchpad(const DS18B20_Info * ds18b20_info, const Scratchpa
     return result;
 }
 
-
 // Public API
 
-DS18B20_Info * ds18b20_malloc(void)
+DS18B20_Info *ds18b20_malloc(void)
 {
-    DS18B20_Info * ds18b20_info = malloc(sizeof(*ds18b20_info));
+    DS18B20_Info *ds18b20_info = malloc(sizeof(*ds18b20_info));
     if (ds18b20_info != NULL)
     {
         memset(ds18b20_info, 0, sizeof(*ds18b20_info));
@@ -349,7 +349,7 @@ DS18B20_Info * ds18b20_malloc(void)
     return ds18b20_info;
 }
 
-void ds18b20_free(DS18B20_Info ** ds18b20_info)
+void ds18b20_free(DS18B20_Info **ds18b20_info)
 {
     if (ds18b20_info != NULL && (*ds18b20_info != NULL))
     {
@@ -359,7 +359,7 @@ void ds18b20_free(DS18B20_Info ** ds18b20_info)
     }
 }
 
-void ds18b20_init(DS18B20_Info * ds18b20_info, const OneWireBus * bus, OneWireBus_ROMCode rom_code)
+void ds18b20_init(DS18B20_Info *ds18b20_info, const OneWireBus *bus, OneWireBus_ROMCode rom_code)
 {
     if (ds18b20_info != NULL)
     {
@@ -375,7 +375,7 @@ void ds18b20_init(DS18B20_Info * ds18b20_info, const OneWireBus * bus, OneWireBu
     }
 }
 
-void ds18b20_init_solo(DS18B20_Info * ds18b20_info, const OneWireBus * bus)
+void ds18b20_init_solo(DS18B20_Info *ds18b20_info, const OneWireBus *bus)
 {
     if (ds18b20_info != NULL)
     {
@@ -392,7 +392,7 @@ void ds18b20_init_solo(DS18B20_Info * ds18b20_info, const OneWireBus * bus)
     }
 }
 
-void ds18b20_use_crc(DS18B20_Info * ds18b20_info, bool use_crc)
+void ds18b20_use_crc(DS18B20_Info *ds18b20_info, bool use_crc)
 {
     if (_is_init(ds18b20_info))
     {
@@ -401,7 +401,7 @@ void ds18b20_use_crc(DS18B20_Info * ds18b20_info, bool use_crc)
     }
 }
 
-bool ds18b20_set_resolution(DS18B20_Info * ds18b20_info, DS18B20_RESOLUTION resolution)
+bool ds18b20_set_resolution(DS18B20_Info *ds18b20_info, DS18B20_RESOLUTION resolution)
 {
     bool result = false;
     if (_is_init(ds18b20_info))
@@ -411,7 +411,7 @@ bool ds18b20_set_resolution(DS18B20_Info * ds18b20_info, DS18B20_RESOLUTION reso
             // read scratchpad up to and including configuration register
             Scratchpad scratchpad = {0};
             _read_scratchpad(ds18b20_info, &scratchpad,
-                    offsetof(Scratchpad, configuration) - offsetof(Scratchpad, temperature) + 1);
+                             offsetof(Scratchpad, configuration) - offsetof(Scratchpad, temperature) + 1);
 
             // modify configuration register to set resolution
             uint8_t value = (((resolution - 1) & 0x03) << 5) | 0x1f;
@@ -440,7 +440,7 @@ bool ds18b20_set_resolution(DS18B20_Info * ds18b20_info, DS18B20_RESOLUTION reso
     return result;
 }
 
-DS18B20_RESOLUTION ds18b20_read_resolution(DS18B20_Info * ds18b20_info)
+DS18B20_RESOLUTION ds18b20_read_resolution(DS18B20_Info *ds18b20_info)
 {
     DS18B20_RESOLUTION resolution = DS18B20_RESOLUTION_INVALID;
     if (_is_init(ds18b20_info))
@@ -448,7 +448,7 @@ DS18B20_RESOLUTION ds18b20_read_resolution(DS18B20_Info * ds18b20_info)
         // read scratchpad up to and including configuration register
         Scratchpad scratchpad = {0};
         _read_scratchpad(ds18b20_info, &scratchpad,
-                offsetof(Scratchpad, configuration) - offsetof(Scratchpad, temperature) + 1);
+                         offsetof(Scratchpad, configuration) - offsetof(Scratchpad, temperature) + 1);
 
         resolution = ((scratchpad.configuration >> 5) & 0x03) + DS18B20_RESOLUTION_9_BIT;
         if (!_check_resolution(resolution))
@@ -464,12 +464,12 @@ DS18B20_RESOLUTION ds18b20_read_resolution(DS18B20_Info * ds18b20_info)
     return resolution;
 }
 
-bool ds18b20_convert(const DS18B20_Info * ds18b20_info)
+bool ds18b20_convert(const DS18B20_Info *ds18b20_info)
 {
     bool result = false;
     if (_is_init(ds18b20_info))
     {
-        const OneWireBus * bus = ds18b20_info->bus;
+        const OneWireBus *bus = ds18b20_info->bus;
         if (_address_device(ds18b20_info))
         {
             // initiate a temperature measurement
@@ -484,7 +484,7 @@ bool ds18b20_convert(const DS18B20_Info * ds18b20_info)
     return result;
 }
 
-void ds18b20_convert_all(const OneWireBus * bus)
+void ds18b20_convert_all(const OneWireBus *bus)
 {
     if (bus)
     {
@@ -500,7 +500,7 @@ void ds18b20_convert_all(const OneWireBus * bus)
     }
 }
 
-float ds18b20_wait_for_conversion(const DS18B20_Info * ds18b20_info)
+float ds18b20_wait_for_conversion(const DS18B20_Info *ds18b20_info)
 {
     float elapsed_time = 0.0f;
     if (_is_init(ds18b20_info))
@@ -520,7 +520,7 @@ float ds18b20_wait_for_conversion(const DS18B20_Info * ds18b20_info)
     return elapsed_time;
 }
 
-DS18B20_ERROR ds18b20_read_temp(const DS18B20_Info * ds18b20_info, float * value)
+DS18B20_ERROR ds18b20_read_temp(const DS18B20_Info *ds18b20_info, float *value)
 {
     DS18B20_ERROR err = DS18B20_ERROR_UNKNOWN;
     if (_is_init(ds18b20_info))
@@ -552,7 +552,7 @@ DS18B20_ERROR ds18b20_read_temp(const DS18B20_Info * ds18b20_info, float * value
     return err;
 }
 
-DS18B20_ERROR ds18b20_convert_and_read_temp(const DS18B20_Info * ds18b20_info, float * value)
+DS18B20_ERROR ds18b20_convert_and_read_temp(const DS18B20_Info *ds18b20_info, float *value)
 {
     DS18B20_ERROR err = DS18B20_ERROR_UNKNOWN;
     if (_is_init(ds18b20_info))
@@ -576,11 +576,12 @@ DS18B20_ERROR ds18b20_convert_and_read_temp(const DS18B20_Info * ds18b20_info, f
     return err;
 }
 
-DS18B20_ERROR ds18b20_check_for_parasite_power(const OneWireBus * bus, bool * present)
+DS18B20_ERROR ds18b20_check_for_parasite_power(const OneWireBus *bus, bool *present)
 {
     DS18B20_ERROR err = DS18B20_ERROR_UNKNOWN;
     ESP_LOGD(TAG, "ds18b20_check_for_parasite_power");
-    if (bus) {
+    if (bus)
+    {
         bool reset_present;
         if ((err = owb_reset(bus, &reset_present)) == DS18B20_OK)
         {
