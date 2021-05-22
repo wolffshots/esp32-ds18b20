@@ -23,6 +23,12 @@
  * SOFTWARE.
  */
 
+/**
+ * @file ds18b20_wrapper.h
+ * @brief definitions for wrapper component to help setup and interface with temp sensor
+ */
+
+
 #ifndef DS18B20_WRAPPER_H
 #define DS18B20_WRAPPER_H
 

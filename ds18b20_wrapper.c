@@ -25,6 +25,12 @@
  * A note on the copyright line: https://www.copyright.gov/title17/92chap4.html#408
  */
 
+/**
+ * @file ds18b20_wrapper.c
+ * @brief implementation for wrapper component to help setup and interface with temp sensor
+ */
+
+
 #include "ds18b20_wrapper.h"
 
 #include "freertos/FreeRTOS.h"
