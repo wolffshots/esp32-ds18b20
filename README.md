@@ -1,4 +1,5 @@
 # esp32-ds18b20
+Docs: [![couldn't get build status](https://api.travis-ci.com/wolffshots/esp32-ds18b20.svg?branch=main "Current doc build status")](https://davidantliff.github.io/esp32-ds18b20/index.html)
 
 ## Introduction
 
