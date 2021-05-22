@@ -240,7 +240,8 @@ void ds18b20_wrapped_read(void)
  * this function runs conversion on all the owb devices, waits for conversion to 
  * finish and then reads the temperatures into the provided results array
  *  
- * @param results a pointer to the array to capture results to
+ * @param[in] results a pointer to the array to capture results to
+ * @param[out] results the array pointer that has been populated with data
  * @param size the number of devices found and the size of the results array
  */
 void ds18b20_wrapped_capture(float *results, int size)
