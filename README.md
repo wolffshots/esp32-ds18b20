@@ -37,7 +37,7 @@ below is short explanation of remaining files in the project folder.
 │   ├── ds18b20_wrapper.h       the header file for the wrapper component
 │   └── ds18b20.h               the header file for the component
 ├── .gitignore                  describes what files and folders git should ignore
-├── .travis.yml                 ci/cd for docs to github pages
+├── .travis.yml                 build rules for creating docs via doxygen
 ├── CMakeLists.txt              base project cmake file (describes dependencies, include dir and src dir)
 ├── component.mk                component make file
 ├── ds18b20_wrapper.c           core src file of the wrapper component

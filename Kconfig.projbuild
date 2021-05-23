@@ -10,11 +10,6 @@ menu "wolffshots/esp32-ds18b20 config"
         default 2
         help
             max number of devices to be connected to a onewire bus
-    config TEMP_SAMPLE_PERIOD
-        int "sample period"
-        default 1000
-        help
-            the sample period for the temp sensor to report in (in milliseconds))
     config TEMP_WRAPPER_TAG
         string "temp wrapper tag"
         default "esp32-ds18b20_wrapper"
@@ -25,4 +20,9 @@ menu "wolffshots/esp32-ds18b20 config"
         default "esp32-ds18b20"
         help
             tag for use with esp log library for base
+    config TEMP_SAMPLE_PERIOD
+        int "sample period"
+        default 1000
+        help
+            the sample period for the temp sensor to report in (in milliseconds))
 endmenu
