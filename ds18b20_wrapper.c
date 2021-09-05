@@ -247,19 +247,19 @@ void ds18b20_wrapped_read(void)
  */
 void ds18b20_wrapped_capture(float *results, int size)
 {
+    TickType_t last_wake_time = xTaskGetTickCount();
     if (size > 0)
     {
-        TickType_t last_wake_time = xTaskGetTickCount();
         ds18b20_convert_all(owb);
         ds18b20_wait_for_conversion(devices[0]);
         for (int i = 0; i < size; ++i)
         {
             ds18b20_read_temp(devices[i], &results[i]);
         }
-        vTaskDelayUntil(&last_wake_time, CONFIG_TEMP_SAMPLE_PERIOD / portTICK_PERIOD_MS);
     }
     else
     {
         ESP_LOGE(TAG, "no DS18B20 devices detected or invalid size provided");
     }
+    vTaskDelayUntil(&last_wake_time, CONFIG_TEMP_SAMPLE_PERIOD / portTICK_PERIOD_MS);
 }
